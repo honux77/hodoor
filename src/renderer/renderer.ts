@@ -113,10 +113,149 @@ setTimeout(() => {
   window.electronAPI.resize(terminal.cols, terminal.rows);
 }, 100);
 
-// Focus input on click anywhere
-document.body.addEventListener('click', () => {
+// Focus input on click anywhere (except side panel)
+document.getElementById('main-content')?.addEventListener('click', () => {
   commandInput.focus();
 });
 
 // Initial focus
 commandInput.focus();
+
+// ============================================
+// Side Panel Toggle
+// ============================================
+const sidePanel = document.getElementById('side-panel') as HTMLElement;
+const toggleBtn = document.getElementById('toggle-btn') as HTMLButtonElement;
+
+toggleBtn.addEventListener('click', () => {
+  sidePanel.classList.toggle('hidden');
+  toggleBtn.classList.toggle('panel-hidden');
+  toggleBtn.textContent = sidePanel.classList.contains('hidden') ? '▶' : '◀';
+
+  // Refit terminal after animation
+  setTimeout(() => {
+    fitAddon.fit();
+    window.electronAPI.resize(terminal.cols, terminal.rows);
+  }, 300);
+});
+
+// ============================================
+// Clock
+// ============================================
+const currentTimeEl = document.getElementById('current-time') as HTMLElement;
+const currentDateEl = document.getElementById('current-date') as HTMLElement;
+
+function updateClock(): void {
+  const now = new Date();
+
+  const hours = String(now.getHours()).padStart(2, '0');
+  const minutes = String(now.getMinutes()).padStart(2, '0');
+  const seconds = String(now.getSeconds()).padStart(2, '0');
+  currentTimeEl.textContent = `${hours}:${minutes}:${seconds}`;
+
+  const options: Intl.DateTimeFormatOptions = {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  };
+  currentDateEl.textContent = now.toLocaleDateString('ko-KR', options);
+}
+
+updateClock();
+setInterval(updateClock, 1000);
+
+// ============================================
+// Calendar
+// ============================================
+const calendarGrid = document.getElementById('calendar-grid') as HTMLElement;
+const calendarMonthYear = document.getElementById('calendar-month-year') as HTMLElement;
+const prevMonthBtn = document.getElementById('prev-month') as HTMLButtonElement;
+const nextMonthBtn = document.getElementById('next-month') as HTMLButtonElement;
+
+let currentCalendarDate = new Date();
+
+const DAYS_KO = ['일', '월', '화', '수', '목', '금', '토'];
+const MONTHS_KO = ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'];
+
+function renderCalendar(date: Date): void {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+
+  calendarMonthYear.textContent = `${year}년 ${MONTHS_KO[month]}`;
+
+  calendarGrid.innerHTML = '';
+
+  // Day headers
+  DAYS_KO.forEach((day, index) => {
+    const header = document.createElement('div');
+    header.className = 'calendar-day-header';
+    if (index === 0) header.style.color = '#f14c4c';
+    if (index === 6) header.style.color = '#3b8eea';
+    header.textContent = day;
+    calendarGrid.appendChild(header);
+  });
+
+  // Get first day of month and total days
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+  const today = new Date();
+  const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+
+  // Previous month days
+  for (let i = firstDay - 1; i >= 0; i--) {
+    const dayEl = document.createElement('div');
+    dayEl.className = 'calendar-day other-month';
+    const dayNum = daysInPrevMonth - i;
+    const dayOfWeek = (firstDay - i - 1 + 7) % 7;
+    if (dayOfWeek === 0) dayEl.classList.add('sunday');
+    if (dayOfWeek === 6) dayEl.classList.add('saturday');
+    dayEl.textContent = String(dayNum);
+    calendarGrid.appendChild(dayEl);
+  }
+
+  // Current month days
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dayEl = document.createElement('div');
+    dayEl.className = 'calendar-day';
+
+    const dayOfWeek = new Date(year, month, day).getDay();
+    if (dayOfWeek === 0) dayEl.classList.add('sunday');
+    if (dayOfWeek === 6) dayEl.classList.add('saturday');
+
+    if (isCurrentMonth && day === today.getDate()) {
+      dayEl.classList.add('today');
+    }
+
+    dayEl.textContent = String(day);
+    calendarGrid.appendChild(dayEl);
+  }
+
+  // Next month days
+  const totalCells = 42; // 6 rows * 7 days
+  const currentCells = firstDay + daysInMonth;
+  for (let day = 1; day <= totalCells - currentCells; day++) {
+    const dayEl = document.createElement('div');
+    dayEl.className = 'calendar-day other-month';
+    const dayOfWeek = (currentCells + day - 1) % 7;
+    if (dayOfWeek === 0) dayEl.classList.add('sunday');
+    if (dayOfWeek === 6) dayEl.classList.add('saturday');
+    dayEl.textContent = String(day);
+    calendarGrid.appendChild(dayEl);
+  }
+}
+
+prevMonthBtn.addEventListener('click', () => {
+  currentCalendarDate.setMonth(currentCalendarDate.getMonth() - 1);
+  renderCalendar(currentCalendarDate);
+});
+
+nextMonthBtn.addEventListener('click', () => {
+  currentCalendarDate.setMonth(currentCalendarDate.getMonth() + 1);
+  renderCalendar(currentCalendarDate);
+});
+
+// Initial render
+renderCalendar(currentCalendarDate);

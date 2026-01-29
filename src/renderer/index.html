@@ -17,8 +17,179 @@
       background-color: #1e1e1e;
       overflow: hidden;
       display: flex;
-      flex-direction: column;
       height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    /* Left Side Panel */
+    #side-panel {
+      width: 280px;
+      background-color: #252526;
+      border-right: 1px solid #3c3c3c;
+      display: flex;
+      flex-direction: column;
+      transition: margin-left 0.3s ease;
+    }
+
+    #side-panel.hidden {
+      margin-left: -280px;
+    }
+
+    #panel-header {
+      padding: 12px;
+      background-color: #2d2d2d;
+      border-bottom: 1px solid #3c3c3c;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    #panel-header h2 {
+      color: #d4d4d4;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    #toggle-btn {
+      position: absolute;
+      left: 280px;
+      top: 10px;
+      z-index: 100;
+      background-color: #3c3c3c;
+      border: none;
+      color: #d4d4d4;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      border-radius: 0 4px 4px 0;
+      transition: left 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #toggle-btn:hover {
+      background-color: #4c4c4c;
+    }
+
+    #toggle-btn.panel-hidden {
+      left: 0;
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* Clock Section */
+    #clock-section {
+      padding: 20px;
+      text-align: center;
+      border-bottom: 1px solid #3c3c3c;
+    }
+
+    #current-time {
+      font-size: 36px;
+      font-weight: 300;
+      color: #0dbc79;
+      font-family: Menlo, Monaco, monospace;
+    }
+
+    #current-date {
+      font-size: 14px;
+      color: #808080;
+      margin-top: 8px;
+    }
+
+    /* Calendar Section */
+    #calendar-section {
+      padding: 16px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    #calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    #calendar-header span {
+      color: #d4d4d4;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .calendar-nav {
+      background: none;
+      border: none;
+      color: #808080;
+      cursor: pointer;
+      padding: 4px 8px;
+      font-size: 14px;
+    }
+
+    .calendar-nav:hover {
+      color: #d4d4d4;
+    }
+
+    #calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+    }
+
+    .calendar-day-header {
+      color: #808080;
+      font-size: 11px;
+      text-align: center;
+      padding: 8px 0;
+    }
+
+    .calendar-day {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #d4d4d4;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .calendar-day:hover {
+      background-color: #3c3c3c;
+    }
+
+    .calendar-day.other-month {
+      color: #555;
+    }
+
+    .calendar-day.today {
+      background-color: #0dbc79;
+      color: #1e1e1e;
+      font-weight: bold;
+    }
+
+    .calendar-day.sunday {
+      color: #f14c4c;
+    }
+
+    .calendar-day.saturday {
+      color: #3b8eea;
+    }
+
+    .calendar-day.other-month.sunday {
+      color: #6b3333;
+    }
+
+    .calendar-day.other-month.saturday {
+      color: #2a4a6b;
+    }
+
+    /* Main Content */
+    #main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
     }
 
     #output-container {
@@ -65,13 +236,43 @@
   </style>
 </head>
 <body>
-  <div id="output-container">
-    <div id="terminal"></div>
+  <!-- Toggle Button -->
+  <button id="toggle-btn" title="Toggle Panel">◀</button>
+
+  <!-- Left Side Panel -->
+  <div id="side-panel">
+    <div id="panel-header">
+      <h2>Dashboard</h2>
+    </div>
+
+    <!-- Clock -->
+    <div id="clock-section">
+      <div id="current-time">00:00:00</div>
+      <div id="current-date">Loading...</div>
+    </div>
+
+    <!-- Calendar -->
+    <div id="calendar-section">
+      <div id="calendar-header">
+        <button class="calendar-nav" id="prev-month">◀</button>
+        <span id="calendar-month-year">January 2026</span>
+        <button class="calendar-nav" id="next-month">▶</button>
+      </div>
+      <div id="calendar-grid"></div>
+    </div>
   </div>
-  <div id="input-container">
-    <span id="prompt">$</span>
-    <input type="text" id="command-input" placeholder="Enter command..." autofocus>
+
+  <!-- Main Content -->
+  <div id="main-content">
+    <div id="output-container">
+      <div id="terminal"></div>
+    </div>
+    <div id="input-container">
+      <span id="prompt">$</span>
+      <input type="text" id="command-input" placeholder="Enter command..." autofocus>
+    </div>
   </div>
+
   <script src="./renderer.js"></script>
 </body>
 </html>
