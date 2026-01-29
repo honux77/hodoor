@@ -100,8 +100,85 @@
     /* Calendar Section */
     #calendar-section {
       padding: 16px;
+      border-bottom: 1px solid #3c3c3c;
+    }
+
+    /* Events Section */
+    #events-section {
       flex: 1;
+      padding: 16px;
       overflow-y: auto;
+    }
+
+    #events-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    #events-header h3 {
+      color: #d4d4d4;
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    #google-auth-btn {
+      background-color: #3c3c3c;
+      border: none;
+      color: #d4d4d4;
+      padding: 4px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    #google-auth-btn:hover {
+      background-color: #4c4c4c;
+    }
+
+    #events-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .event-item {
+      background-color: #2d2d2d;
+      border-left: 3px solid #0dbc79;
+      padding: 8px 10px;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .event-time {
+      font-size: 11px;
+      color: #0dbc79;
+      margin-bottom: 4px;
+    }
+
+    .event-title {
+      font-size: 12px;
+      color: #d4d4d4;
+    }
+
+    .event-calendar {
+      font-size: 10px;
+      color: #808080;
+      margin-top: 4px;
+    }
+
+    .no-events {
+      color: #808080;
+      font-size: 12px;
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .events-loading {
+      color: #808080;
+      font-size: 12px;
+      text-align: center;
+      padding: 20px 0;
     }
 
     #calendar-header {
@@ -259,6 +336,17 @@
         <button class="calendar-nav" id="next-month">▶</button>
       </div>
       <div id="calendar-grid"></div>
+    </div>
+
+    <!-- Today's Events -->
+    <div id="events-section">
+      <div id="events-header">
+        <h3>Today's Events</h3>
+        <button id="google-auth-btn">Connect</button>
+      </div>
+      <div id="events-list">
+        <div class="no-events">Click Connect to sync Google Calendar</div>
+      </div>
     </div>
   </div>
 

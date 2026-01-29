@@ -1,6 +1,15 @@
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
 
+interface CalendarEvent {
+  id: string;
+  summary: string;
+  start: { dateTime?: string; date?: string };
+  end: { dateTime?: string; date?: string };
+  calendarName?: string;
+  calendarColor?: string;
+}
+
 declare global {
   interface Window {
     electronAPI: {
@@ -8,6 +17,13 @@ declare global {
       resize: (cols: number, rows: number) => void;
       onData: (callback: (data: string) => void) => void;
       removeAllListeners: () => void;
+      calendar: {
+        checkAuth: () => Promise<boolean>;
+        auth: () => Promise<boolean>;
+        getEvents: () => Promise<{ success: boolean; events?: CalendarEvent[]; error?: string }>;
+        logout: () => Promise<boolean>;
+        onAuthSuccess: (callback: () => void) => void;
+      };
     };
   }
 }
@@ -259,3 +275,109 @@ nextMonthBtn.addEventListener('click', () => {
 
 // Initial render
 renderCalendar(currentCalendarDate);
+
+// ============================================
+// Google Calendar Events
+// ============================================
+const googleAuthBtn = document.getElementById('google-auth-btn') as HTMLButtonElement;
+const eventsList = document.getElementById('events-list') as HTMLElement;
+
+let isAuthenticated = false;
+
+function formatEventTime(event: CalendarEvent): string {
+  if (event.start.dateTime) {
+    const start = new Date(event.start.dateTime);
+    const end = new Date(event.end.dateTime!);
+    const startTime = start.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+    const endTime = end.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+    return `${startTime} - ${endTime}`;
+  }
+  return 'All day';
+}
+
+function renderEvents(events: CalendarEvent[]): void {
+  eventsList.innerHTML = '';
+
+  if (events.length === 0) {
+    eventsList.innerHTML = '<div class="no-events">No events today</div>';
+    return;
+  }
+
+  events.forEach((event) => {
+    const eventEl = document.createElement('div');
+    eventEl.className = 'event-item';
+    if (event.calendarColor) {
+      eventEl.style.borderLeftColor = event.calendarColor;
+    }
+    eventEl.innerHTML = `
+      <div class="event-time">${formatEventTime(event)}</div>
+      <div class="event-title">${event.summary || '(No title)'}</div>
+      ${event.calendarName ? `<div class="event-calendar">${event.calendarName}</div>` : ''}
+    `;
+    eventsList.appendChild(eventEl);
+  });
+}
+
+function showLoading(): void {
+  eventsList.innerHTML = '<div class="events-loading">Loading events...</div>';
+}
+
+function showError(message: string): void {
+  eventsList.innerHTML = `<div class="no-events">${message}</div>`;
+}
+
+async function loadEvents(): Promise<void> {
+  showLoading();
+  const result = await window.electronAPI.calendar.getEvents();
+
+  if (result.success && result.events) {
+    renderEvents(result.events);
+  } else {
+    showError(result.error || 'Failed to load events');
+  }
+}
+
+async function updateAuthState(): Promise<void> {
+  isAuthenticated = await window.electronAPI.calendar.checkAuth();
+
+  if (isAuthenticated) {
+    googleAuthBtn.textContent = 'Refresh';
+    loadEvents();
+  } else {
+    googleAuthBtn.textContent = 'Connect';
+    eventsList.innerHTML = '<div class="no-events">Click Connect to sync Google Calendar</div>';
+  }
+}
+
+googleAuthBtn.addEventListener('click', async () => {
+  if (isAuthenticated) {
+    // Refresh events
+    loadEvents();
+  } else {
+    // Start OAuth flow
+    googleAuthBtn.textContent = 'Connecting...';
+    googleAuthBtn.disabled = true;
+
+    const success = await window.electronAPI.calendar.auth();
+
+    googleAuthBtn.disabled = false;
+    if (success) {
+      isAuthenticated = true;
+      googleAuthBtn.textContent = 'Refresh';
+      loadEvents();
+    } else {
+      googleAuthBtn.textContent = 'Connect';
+      showError('Authentication failed. Please try again.');
+    }
+  }
+});
+
+// Listen for auth success from main process
+window.electronAPI.calendar.onAuthSuccess(() => {
+  isAuthenticated = true;
+  googleAuthBtn.textContent = 'Refresh';
+  loadEvents();
+});
+
+// Initial auth check
+updateAuthState();

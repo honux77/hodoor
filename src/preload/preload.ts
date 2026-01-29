@@ -21,5 +21,17 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // Remove listeners
   removeAllListeners: () => {
     ipcRenderer.removeAllListeners('terminal:data');
+    ipcRenderer.removeAllListeners('calendar:auth-success');
+  },
+
+  // Calendar API
+  calendar: {
+    checkAuth: () => ipcRenderer.invoke('calendar:check-auth'),
+    auth: () => ipcRenderer.invoke('calendar:auth'),
+    getEvents: () => ipcRenderer.invoke('calendar:get-events'),
+    logout: () => ipcRenderer.invoke('calendar:logout'),
+    onAuthSuccess: (callback: () => void) => {
+      ipcRenderer.on('calendar:auth-success', () => callback());
+    },
   },
 });
