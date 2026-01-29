@@ -12,16 +12,17 @@ declare global {
   }
 }
 
-// Create terminal instance
+// Create terminal instance (output only)
 const terminal = new Terminal({
-  cursorBlink: true,
+  cursorBlink: false,
   fontSize: 14,
   fontFamily: 'Menlo, Monaco, "Courier New", monospace',
+  disableStdin: true,
   theme: {
     background: '#1e1e1e',
     foreground: '#d4d4d4',
-    cursor: '#ffffff',
-    cursorAccent: '#000000',
+    cursor: '#1e1e1e',
+    cursorAccent: '#1e1e1e',
     selectionBackground: '#264f78',
     black: '#000000',
     red: '#cd3131',
@@ -53,9 +54,46 @@ if (terminalContainer) {
   fitAddon.fit();
 }
 
-// Handle terminal input
-terminal.onData((data) => {
-  window.electronAPI.sendInput(data);
+// Get input elements
+const commandInput = document.getElementById('command-input') as HTMLInputElement;
+const promptSpan = document.getElementById('prompt') as HTMLSpanElement;
+
+// Command history
+const commandHistory: string[] = [];
+let historyIndex = -1;
+
+// Handle command input
+commandInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    const command = commandInput.value;
+    if (command.trim()) {
+      commandHistory.push(command);
+      historyIndex = commandHistory.length;
+      // Display command in output
+      terminal.writeln(`\x1b[36m$ ${command}\x1b[0m`);
+      window.electronAPI.sendInput(command + '\n');
+    } else {
+      window.electronAPI.sendInput('\n');
+    }
+    commandInput.value = '';
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (historyIndex > 0) {
+      historyIndex--;
+      commandInput.value = commandHistory[historyIndex];
+    }
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (historyIndex < commandHistory.length - 1) {
+      historyIndex++;
+      commandInput.value = commandHistory[historyIndex];
+    } else {
+      historyIndex = commandHistory.length;
+      commandInput.value = '';
+    }
+  } else if (e.key === 'c' && e.ctrlKey) {
+    window.electronAPI.sendInput('\x03');
+  }
 });
 
 // Handle data from main process
@@ -75,5 +113,10 @@ setTimeout(() => {
   window.electronAPI.resize(terminal.cols, terminal.rows);
 }, 100);
 
-// Focus terminal
-terminal.focus();
+// Focus input on click anywhere
+document.body.addEventListener('click', () => {
+  commandInput.focus();
+});
+
+// Initial focus
+commandInput.focus();

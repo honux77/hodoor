@@ -5,9 +5,11 @@
   "main": "dist/main/main.js",
   "scripts": {
     "start": "npm run build && electron .",
-    "build": "tsc && npm run copy-assets",
-    "copy-assets": "cp src/renderer/index.html dist/renderer/",
-    "watch": "tsc -w",
+    "build": "tsc && npm run build:renderer && npm run copy-assets",
+    "build:renderer": "esbuild src/renderer/renderer.ts --bundle --outfile=dist/renderer/renderer.js --platform=browser --target=chrome120",
+    "copy-assets": "cp src/renderer/index.html dist/renderer/ && cp node_modules/@xterm/xterm/css/xterm.css dist/renderer/",
+    "watch": "concurrently \"tsc -w\" \"npm run watch:renderer\"",
+    "watch:renderer": "esbuild src/renderer/renderer.ts --bundle --outfile=dist/renderer/renderer.js --platform=browser --target=chrome120 --watch",
     "dev": "npm run build && concurrently \"npm run watch\" \"electron .\"",
     "postinstall": "electron-rebuild",
     "pack": "electron-builder --dir",
@@ -54,6 +56,7 @@
     "concurrently": "^8.2.2",
     "electron": "^28.1.0",
     "electron-builder": "^24.9.1",
+    "esbuild": "^0.27.2",
     "typescript": "^5.3.3"
   },
   "dependencies": {
