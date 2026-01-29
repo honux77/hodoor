@@ -1,0 +1,64 @@
+{
+  "name": "hodoor",
+  "version": "1.0.0",
+  "description": "Terminal Commander App",
+  "main": "dist/main/main.js",
+  "scripts": {
+    "start": "npm run build && electron .",
+    "build": "tsc && npm run copy-assets",
+    "copy-assets": "cp src/renderer/index.html dist/renderer/",
+    "watch": "tsc -w",
+    "dev": "npm run build && concurrently \"npm run watch\" \"electron .\"",
+    "postinstall": "electron-rebuild",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:mac": "electron-builder --mac",
+    "dist:win": "electron-builder --win",
+    "dist:all": "electron-builder --mac --win"
+  },
+  "build": {
+    "appId": "com.hodoor.terminal-commander",
+    "productName": "Hodoor",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.developer-tools",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    },
+    "win": {
+      "target": [
+        "nsis",
+        "portable"
+      ]
+    }
+  },
+  "keywords": [
+    "electron",
+    "typescript",
+    "terminal",
+    "commander"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@electron/rebuild": "^3.7.2",
+    "@types/node": "^20.11.0",
+    "concurrently": "^8.2.2",
+    "electron": "^28.1.0",
+    "electron-builder": "^24.9.1",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/xterm": "^6.0.0",
+    "node-pty": "^1.0.0"
+  }
+}
